@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: ecommerce-es-demo
+
+  logging:
+    level:
+      com.ecommerce.es: debug
+      co.elastic.clients: info
+      org.elasticsearch: warn
+
+elasticsearch:
+  host: localhost
+  port: 9200
+  scheme: http           # 协议（生产可配https）
+  connect-timeout: 5000
+  socket-timeout: 30000  # 读写超时
+  # 若ES开启账号密码（生产必配），添加以下配置
+  # username: elastic
+  # password: your-password
+
+
+server:
+  port: 8080
+  servlet:
+    context-path: /ecommerce

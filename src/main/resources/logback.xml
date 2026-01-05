@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 全局参数配置 -->
+    <property name="LOG_HOME" value="./logs/ecommerce-es"/> <!-- 日志根目录 -->
+    <property name="APP_NAME" value="ecommerce-es-demo"/>    <!-- 应用名 -->
+    <property name="LOG_CHARSET" value="UTF-8"/>             <!-- 字符集 -->
+    <!-- 日志格式：包含时间、线程、级别、类、日志内容 -->
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
+
+    <!-- 1. 控制台输出（开发环境） -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>${LOG_CHARSET}</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <!-- 控制台仅输出INFO及以上级别（开发环境可改为DEBUG） -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- 2. 应用核心日志（按天滚动，保留30天） -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志文件路径 -->
+        <file>${LOG_HOME}/${APP_NAME}.log</file>
+        <!-- 滚动策略：按天切割，文件大小限制100MB -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize> <!-- 单个文件最大100MB -->
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory> <!-- 保留30天日志 -->
+            <totalSizeCap>10GB</totalSizeCap> <!-- 总日志大小上限10GB -->
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <!-- 日志编码和格式 -->
+        <encoder>
+            <charset>${LOG_CHARSET}</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <!-- 输出级别：DEBUG及以上（包含业务调试日志） -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+    <!-- 3. ES客户端专属日志（单独切割，便于排查ES问题） -->
+    <appender name="ES_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/es-client.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/es-client.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>50MB</maxFileSize> <!-- ES日志较小，限制50MB/文件 -->
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>15</maxHistory> <!-- 保留15天 -->
+        </rollingPolicy>
+        <encoder>
+            <charset>${LOG_CHARSET}</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- 4. 错误日志（单独存储，便于定位问题） -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory> <!-- 错误日志保留90天 -->
+        </rollingPolicy>
+        <encoder>
+            <charset>${LOG_CHARSET}</charset>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+        <!-- 仅输出ERROR级别日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 日志级别配置（核心） -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>   <!-- 控制台输出 -->
+        <appender-ref ref="APP_FILE"/>  <!-- 应用日志文件 -->
+        <appender-ref ref="ERROR_FILE"/> <!-- 错误日志文件 -->
+    </root>
+
+    <!-- 自定义业务包日志级别：DEBUG（便于调试电商业务） -->
+    <logger name="com.ecommerce.es" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="APP_FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </logger>
+
+    <!-- ES客户端日志级别：INFO（避免过多调试日志，生产可改为WARN） -->
+    <logger name="co.elastic.clients" level="INFO" additivity="false">
+        <appender-ref ref="ES_FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.elasticsearch" level="WARN" additivity="false">
+        <appender-ref ref="ES_FILE"/>
+    </logger>
+
+    <!-- Spring框架日志：WARN（减少无关日志） -->
+    <logger name="org.springframework" level="WARN" additivity="false">
+        <appender-ref ref="APP_FILE"/>
+    </logger>
+    <logger name="org.springframework.web" level="INFO" additivity="false">
+        <appender-ref ref="APP_FILE"/>
+    </logger>
+
+    <!-- 第三方库日志：ERROR（仅输出错误） -->
+    <logger name="com.fasterxml.jackson" level="ERROR" additivity="false">
+        <appender-ref ref="APP_FILE"/>
+    </logger>
+    <logger name="org.apache.http" level="ERROR" additivity="false">
+        <appender-ref ref="APP_FILE"/>
+    </logger>
+</configuration>
