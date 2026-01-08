@@ -133,7 +133,7 @@ public class ProductSearchController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) List<String> tags,
             @RequestParam(required = false) String sortField,
-            @RequestParam(required = false, defaultValue = "DESC") SortOrder sortOrder
+            @RequestParam(required = false, defaultValue = "Desc") SortOrder sortOrder
     ) {
         try {
             List<Product> productList = productService.searchProduct(
