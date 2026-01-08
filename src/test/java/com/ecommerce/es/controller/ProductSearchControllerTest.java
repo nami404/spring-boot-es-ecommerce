@@ -201,42 +201,53 @@ class ProductSearchControllerTest {
                 .andExpect(content().string("商品删除成功，操作结果：删除成功"));
     }
 
-//    @Test
-//    void testSearchProduct_Success() throws Exception {
-//        // Mock 搜索结果 - 使用any()匹配所有参数
-//        doReturn(testProductList).when(productService).searchProduct(
-//                anyString(), any(BigDecimal.class), any(BigDecimal.class),
-//                anyString(), anyList(), anyString(), any(SortOrder.class)
-//        );
-//
-//        mockMvc.perform(MockMvcRequestBuilders.get("/product/search")
-//                        .param("keyword", "手机")
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andDo(print())
-//                .andExpect(status().isOk())
-//                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(1))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value("1001"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].productName").value("测试手机"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].price").value(2999.99))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].category").value("手机"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[0]").value("智能"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[1]").value("5G"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[2]").value("新品"));
-//    }
-//
-//    @Test
-//    void testSearchProduct_ParamError() throws Exception {
-//        doThrow(new IllegalArgumentException("排序字段不能为空")).when(productService).searchProduct(
-//                anyString(), any(BigDecimal.class), any(BigDecimal.class),
-//                anyString(), anyList(), anyString(), any(SortOrder.class)
-//        );
-//
-//        mockMvc.perform(MockMvcRequestBuilders.get("/product/search")
-//                        .param("keyword", "手机")
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isBadRequest())
-//                .andExpect(content().string("")); // 错误时返回 null，响应体为空字符串
-//    }
+    @Test
+    void testSearchProduct_Success() throws Exception {
+        // Mock 搜索结果 - 使用any()匹配所有参数
+        doReturn(testProductList).when(productService).searchProduct(
+                anyString(), any(BigDecimal.class), any(BigDecimal.class),
+                anyString(), anyList(), anyString(), any(SortOrder.class)
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/product/search")
+                        .param("keyword", "手机")
+                        .param("minPrice", "2000")
+                        .param("maxPrice", "9000")
+                        .param("category", "手机")
+                        .param("tags", "[]")
+                        .param("sortField", "price")
+                        .param("sortOrder", "Desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value("1001"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].productName").value("测试手机"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].price").value(2999.99))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].category").value("手机"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[0]").value("智能"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[1]").value("5G"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].tags[2]").value("新品"));
+    }
+
+    @Test
+    void testSearchProduct_ParamError() throws Exception {
+        doThrow(new IllegalArgumentException("排序字段不能为空")).when(productService).searchProduct(
+                anyString(), any(BigDecimal.class), any(BigDecimal.class),
+                anyString(), anyList(), anyString(), any(SortOrder.class)
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/product/search")
+                        .param("keyword", "手机")
+                        .param("minPrice", "2000")
+                        .param("maxPrice", "9000")
+                        .param("category", "手机")
+                        .param("tags", "[]")
+                        .param("sortField", "price")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("")); // 错误时返回 null，响应体为空字符串
+    }
 
     @Test
     void testAggProductByCategory_Success() throws Exception {
